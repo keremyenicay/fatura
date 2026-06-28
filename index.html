@@ -462,15 +462,21 @@ async function runProcess(){
 
   if(!ws){ log('Purchase sayfası bulunamadı!', 'log-err'); btn.disabled=false; btn.innerHTML='İşle ve Excel\'e yaz'; return; }
 
-  // Find first empty row in Purchase sheet (col B = index 1, header at row 4, data from row 5)
+  // Purchase sheet structure:
+  //   Row 1-2: empty
+  //   Row 3: "PURCHASE TABLE" title
+  //   Row 4 (idx 3): headers — DATE / SUPPLIER / AMOUNT / PAGE TOTAL
+  //   Row 5 (idx 4): TEMPLATE row — "00/00/2000" placeholder + =SUM(D5:D271) formula — NEVER overwrite
+  //   Row 6 (idx 5): first real data row
   const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:G339');
-  let nextRow = 4; // 0-indexed; row 5 in Excel = index 4
-  for(let r = 4; r <= range.e.r + 1; r++){
-    const cell = ws[XLSX.utils.encode_cell({r, c:1})];
-    if(!cell || !cell.v || cell.v === '00/00/2000' || cell.v === 0){ nextRow = r; break; }
+  let nextRow = 5; // 0-indexed = Excel row 6, first real data row
+  for(let r = 5; r <= range.e.r + 1; r++){
+    const cell = ws[XLSX.utils.encode_cell({r, c:1})]; // col B = DATE
+    const hasRealDate = cell && cell.v && cell.v !== '00/00/2000' && cell.v !== 0 && cell.v !== ' ' && String(cell.v).trim() !== '';
+    if(!hasRealDate){ nextRow = r; break; }
     nextRow = r + 1;
   }
-  log(`Purchase sayfasında ilk boş satır: ${nextRow+1}`, 'log-info');
+  log(`Purchase sayfası: veriler Excel satır ${nextRow+1}'den itibaren ekleniyor (şablon satırı 5 korundu)`, 'log-info');
 
   // Reset status for re-processing
   pdfQueue.forEach(p=>{ p.status='pending'; p.supplier=null; p.txDate=null; p.amountUSD=null; p.gbp=null; p.rate=null; p.cardType=null; p.lastDigits=null; });
@@ -510,10 +516,9 @@ async function runProcess(){
       const gbp = data.amountUSD ? parseFloat((data.amountUSD * rate).toFixed(2)) : 0;
       p.rate = rate; p.gbp = gbp;
 
+      const row = nextRow++; // satır numarasını hemen al (paralel çakışmayı önler)
       const useDate = parseDate(data.txDate);
       const exDate = toExcelDate(useDate);
-      const row = nextRow;
-      nextRow++;
 
       ws[XLSX.utils.encode_cell({r:row, c:1})] = {t:'n', v:exDate, z:'dd/mm/yyyy'};
       ws[XLSX.utils.encode_cell({r:row, c:2})] = {t:'s', v:p.supplier};

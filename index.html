@@ -7,575 +7,494 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --bg: #f5f5f4;
-    --surface: #ffffff;
-    --surface2: #f9f9f8;
-    --border: #e5e5e3;
-    --border2: #d4d4d0;
-    --text: #1c1c1a;
-    --text2: #6b6b67;
-    --text3: #9b9b96;
-    --accent: #2563eb;
-    --accent-bg: #eff6ff;
-    --success: #16a34a;
-    --success-bg: #f0fdf4;
-    --danger: #dc2626;
-    --danger-bg: #fef2f2;
-    --warning: #d97706;
-    --warning-bg: #fffbeb;
-    --radius: 8px;
-    --radius-lg: 12px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+:root{--bg:#f5f5f4;--surface:#fff;--s2:#f9f9f8;--bd:#e5e5e3;--bd2:#d4d4d0;--tx:#1c1c1a;--tx2:#6b6b67;--tx3:#9b9b96;--ac:#2563eb;--ac-bg:#eff6ff;--ok:#16a34a;--ok-bg:#f0fdf4;--er:#dc2626;--er-bg:#fef2f2;--wn:#d97706;--wn-bg:#fffbeb;--r:8px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--tx);font-size:14px;line-height:1.5;display:flex;flex-direction:column}
 
-  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem; height: 52px; position: sticky; top: 0; z-index: 100; }
-  .topbar-logo { font-weight: 600; font-size: 15px; color: var(--text); }
-  .topbar-logo span { color: var(--accent); }
-  .topbar-badge { font-size: 11px; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 20px; font-weight: 500; border: 1px solid #bfdbfe; }
-  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-  .topbar-rule { font-size: 12px; color: var(--text3); padding: 4px 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; }
+/* ── topbar ── */
+.top{background:var(--surface);border-bottom:1px solid var(--bd);padding:0 1.25rem;display:flex;align-items:center;gap:.75rem;height:48px;flex-shrink:0;z-index:10}
+.top-logo{font-weight:600;font-size:15px}.top-logo span{color:var(--ac)}
+.pill{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.pill-ac{background:var(--ac-bg);color:var(--ac);border:1px solid #bfdbfe}
+.pill-tx{background:var(--s2);color:var(--tx3);border:1px solid var(--bd)}
+.ml{margin-left:auto}
 
-  .layout { display: grid; grid-template-columns: 320px 1fr; gap: 0; min-height: calc(100vh - 52px); }
+/* ── layout ── */
+.body{display:flex;flex:1;overflow:hidden}
+.side{width:300px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--bd);display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden}
+.side-inner{padding:1rem;display:flex;flex-direction:column;gap:.75rem;flex:1}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:1rem;gap:.75rem}
 
-  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
-  .main { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+/* ── cards ── */
+.card{background:var(--surface);border:1px solid var(--bd);border-radius:10px;padding:.875rem 1rem}
+.ct{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:.625rem}
 
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.125rem; }
-  .card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: .75rem; }
+/* ── drop zones ── */
+.dz{border:1.5px dashed var(--bd2);border-radius:var(--r);padding:1.125rem .75rem;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.dz:hover,.dz.over{border-color:var(--ac);background:var(--ac-bg)}
+.dz svg{display:block;margin:0 auto .375rem;color:var(--tx3)}
+.dz p{font-size:13px;color:var(--tx2)}.dz small{font-size:11px;color:var(--tx3)}
+input[type=file]{display:none}
 
-  .drop-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius); padding: 1.5rem 1rem; text-align: center; cursor: pointer; transition: border-color .15s, background .15s; }
-  .drop-zone:hover, .drop-zone.over { border-color: var(--accent); background: var(--accent-bg); }
-  .drop-zone svg { display: block; margin: 0 auto .5rem; color: var(--text3); }
-  .drop-zone p { font-size: 13px; color: var(--text2); }
-  .drop-zone small { font-size: 11px; color: var(--text3); }
+/* ── status strip ── */
+.xl-ok{display:flex;align-items:center;gap:8px;font-size:13px;padding:7px 9px;background:var(--ok-bg);border:1px solid #bbf7d0;border-radius:var(--r);color:var(--ok)}
+.xl-ok svg{flex-shrink:0}.xl-ok span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-  .xl-loaded { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 10px; background: var(--success-bg); border: 1px solid #bbf7d0; border-radius: var(--radius); color: var(--success); }
-  .xl-loaded svg { flex-shrink: 0; }
-  .xl-loaded span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+/* ── rule box ── */
+.rule{font-size:12px;color:var(--tx2);line-height:1.7;padding:.5rem .75rem;background:var(--ac-bg);border-left:3px solid var(--ac);border-radius:0 var(--r) var(--r) 0}
+.rule strong{color:var(--tx)}
 
-  .rule-box { font-size: 12px; color: var(--text2); line-height: 1.7; padding: .625rem .75rem; background: var(--accent-bg); border-left: 3px solid var(--accent); border-radius: 0 var(--radius) var(--radius) 0; }
-  .rule-box strong { color: var(--text); }
+/* ── buttons ── */
+.btn{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:500;padding:7px 13px;border-radius:var(--r);cursor:pointer;border:1px solid transparent;transition:all .12s;white-space:nowrap}
+.btn-p{background:var(--ac);color:#fff;border-color:var(--ac)}.btn-p:hover:not(:disabled){background:#1d4ed8}
+.btn-p:disabled{opacity:.35;cursor:not-allowed}
+.btn-g{background:var(--ok);color:#fff;border-color:var(--ok)}.btn-g:hover:not(:disabled){background:#15803d}
+.btn-g:disabled{opacity:.35;cursor:not-allowed}
+.btn-s{background:var(--surface);color:var(--tx);border-color:var(--bd2)}.btn-s:hover{background:var(--s2)}
+.btn-d{background:transparent;color:var(--er);border-color:#fca5a5;font-size:11px;padding:2px 7px}.btn-d:hover{background:var(--er-bg)}
+.btn-full{width:100%;justify-content:center}
+.btn-xs{font-size:11px;padding:3px 9px}
 
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: .625rem .75rem; text-align: center; }
-  .stat-val { font-size: 24px; font-weight: 600; color: var(--text); line-height: 1; margin-bottom: 4px; }
-  .stat-lbl { font-size: 11px; color: var(--text3); }
-  .stat-card.s-added .stat-val { color: var(--success); }
-  .stat-card.s-skip .stat-val { color: var(--text3); }
-  .stat-card.s-err .stat-val { color: var(--danger); }
+/* ── stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex-shrink:0}
+.stat{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:.5rem .75rem;text-align:center}
+.stat-v{font-size:22px;font-weight:600;line-height:1;margin-bottom:3px}
+.stat-l{font-size:11px;color:var(--tx3)}
+.s-ok .stat-v{color:var(--ok)}.s-sk .stat-v{color:var(--tx3)}.s-er .stat-v{color:var(--er)}
 
-  .progress-bar-wrap { background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; margin-bottom: .5rem; }
-  .progress-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width .2s; width: 0%; }
+/* ── progress ── */
+.prog-wrap{background:var(--bd);border-radius:4px;height:5px;overflow:hidden;margin-bottom:.375rem}
+.prog{height:100%;background:var(--ac);border-radius:4px;transition:width .15s;width:0%}
 
-  .table-wrap { flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead { position: sticky; top: 0; background: var(--surface2); z-index: 1; }
-  th { padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
+/* ── log ── */
+.log{background:#1a1a18;border-radius:var(--r);padding:.625rem .875rem;font-family:'SF Mono','Fira Code',monospace;font-size:11px;height:150px;overflow-y:auto;line-height:1.75;flex-shrink:0}
+.log p{margin:0}
+.lx{color:#a3a39e}.li{color:#60a5fa}.lo{color:#4ade80}.ls{color:#6b7280}.le{color:#f87171}
 
-  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
-  .badge-pending { background: var(--warning-bg); color: var(--warning); border: 1px solid #fde68a; }
-  .badge-added { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
-  .badge-skip { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
-  .badge-error { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
-  .badge-processing { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+/* ── table area ── */
+.tbl-area{flex:1;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:10px;background:var(--surface)}
+.tbl-head{padding:.625rem 1rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.tbl-scroll{overflow:auto;flex:1}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead{position:sticky;top:0;background:var(--s2);z-index:1}
+th{padding:7px 11px;text-align:left;font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:6px 11px;border-bottom:1px solid var(--bd);color:var(--tx);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--s2)}
 
-  .btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent; transition: all .15s; }
-  .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
-  .btn-primary:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border2); }
-  .btn-secondary:hover { background: var(--surface2); }
-  .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
-  .btn-success:hover:not(:disabled) { background: #15803d; }
-  .btn-success:disabled { opacity: .4; cursor: not-allowed; }
-  .btn-danger { background: transparent; color: var(--danger); border-color: #fca5a5; }
-  .btn-danger:hover { background: var(--danger-bg); }
+/* ── badges ── */
+.b{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:1px 7px;border-radius:20px;white-space:nowrap}
+.b-w{background:var(--wn-bg);color:var(--wn);border:1px solid #fde68a}
+.b-g{background:var(--ok-bg);color:var(--ok);border:1px solid #bbf7d0}
+.b-s{background:var(--s2);color:var(--tx3);border:1px solid var(--bd)}
+.b-e{background:var(--er-bg);color:var(--er);border:1px solid #fecaca}
+.b-p{background:var(--ac-bg);color:var(--ac);border:1px solid #bfdbfe}
 
-  .log-box { background: #1a1a18; border-radius: var(--radius); padding: .75rem 1rem; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11.5px; max-height: 200px; overflow-y: auto; line-height: 1.7; }
-  .log-box p { margin: 0; }
-  .log-default { color: #a3a39e; }
-  .log-info { color: #60a5fa; }
-  .log-ok { color: #4ade80; }
-  .log-skip { color: #6b7280; }
-  .log-err { color: #f87171; }
-  .log-warn { color: #fbbf24; }
+/* ── filter ── */
+.filters{display:flex;gap:5px}
+.fb{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--bd);background:var(--surface);color:var(--tx2);cursor:pointer}
+.fb.act{border-color:var(--ac);background:var(--ac-bg);color:var(--ac)}
 
-  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 3rem 1rem; color: var(--text3); gap: .5rem; text-align: center; }
-  .empty-state svg { opacity: .3; margin-bottom: .5rem; }
-  .empty-state p { font-size: 13px; }
-
-  input[type=file] { display: none; }
-  .row { display: flex; align-items: center; gap: 8px; }
-  .flex1 { flex: 1; }
-  .mt-sm { margin-top: .5rem; }
-  .text-muted { color: var(--text3); font-size: 12px; }
-
-  .pdf-count-badge { font-size: 12px; background: var(--accent-bg); color: var(--accent); padding: 2px 8px; border-radius: 20px; border: 1px solid #bfdbfe; font-weight: 500; }
-
-  .filter-row { display: flex; gap: 6px; margin-bottom: .75rem; }
-  .filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); color: var(--text2); cursor: pointer; }
-  .filter-btn.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent); }
-
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin .6s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+/* ── misc ── */
+.spin{display:inline-block;width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:sp .6s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.row{display:flex;align-items:center;gap:8px}.f1{flex:1}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;color:var(--tx3);gap:.375rem;text-align:center}
+.empty svg{opacity:.25;margin-bottom:.375rem}.empty p{font-size:13px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-logo">Amazon PDF <span>→ Excel</span></div>
-  <div class="topbar-badge">GG ECOM LTD</div>
-  <div class="topbar-right">
-    <div class="topbar-rule">Kural: kart ≠ 1076 &amp; billing = GG ECOM LTD</div>
+<div class="top">
+  <div class="top-logo">Amazon PDF <span>→ Excel</span></div>
+  <div class="pill pill-ac">GG ECOM LTD</div>
+  <div class="ml row" style="gap:.5rem">
+    <div class="pill pill-tx">kart ≠ 1076 &amp; billing = GG ECOM LTD</div>
   </div>
 </div>
 
-<div class="layout">
+<div class="body">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <!-- SIDEBAR — fixed height, own scroll -->
+  <aside class="side">
+    <div class="side-inner">
 
-    <div class="card">
-      <div class="card-title">1 — Excel dosyası</div>
-      <div id="xlDropZone" class="drop-zone" onclick="document.getElementById('xlFile').click()">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        <p>Excel dosyasını sürükle veya tıkla</p>
-        <small>.xlsx</small>
+      <div class="card">
+        <div class="ct">1 — Excel dosyası</div>
+        <div id="xlDZ" class="dz" onclick="document.getElementById('xlF').click()">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <p>Excel dosyasını sürükle veya tıkla</p><small>.xlsx</small>
+        </div>
+        <div id="xlOK" class="xl-ok" style="display:none;margin-top:.5rem">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span id="xlName">—</span>
+          <button class="btn btn-d" onclick="clearXL()">✕</button>
+        </div>
+        <input type="file" id="xlF" accept=".xlsx">
       </div>
-      <div id="xlLoaded" class="xl-loaded" style="display:none">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <span id="xlName">—</span>
-        <button class="btn btn-danger" style="padding:2px 8px;font-size:11px;" onclick="clearXL()">✕</button>
-      </div>
-      <input type="file" id="xlFile" accept=".xlsx">
-    </div>
 
-    <div class="card">
-      <div class="card-title">2 — Amazon PDF faturalar</div>
-      <div id="pdfDropZone" class="drop-zone" onclick="document.getElementById('pdfFiles').click()">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p>PDF'leri sürükle veya tıkla</p>
-        <small>Binlerce PDF aynı anda — sorun değil</small>
+      <div class="card">
+        <div class="ct">2 — Amazon PDF faturalar</div>
+        <div id="pdfDZ" class="dz" onclick="document.getElementById('pdfF').click()">
+          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>PDF'leri sürükle veya tıkla</p>
+          <small id="pdfSub">1000+ PDF desteklenir</small>
+        </div>
+        <input type="file" id="pdfF" accept=".pdf" multiple>
       </div>
-      <input type="file" id="pdfFiles" accept=".pdf" multiple>
-      <div class="mt-sm row">
-        <span id="pdfCountBadge" class="pdf-count-badge" style="display:none">0 PDF</span>
-        <span class="flex1"></span>
-        <button class="btn btn-danger" style="display:none" id="btnClearPDF" onclick="clearPDFs()">Listeyi temizle</button>
-      </div>
-    </div>
 
-    <div class="card">
-      <div class="card-title">Filtre kuralları</div>
-      <div class="rule-box">
-        <strong>Ekle:</strong> Billing = <strong>GG ECOM LTD</strong> &amp; kart son hanesi ≠ <strong>1076</strong><br>
+      <div class="rule">
+        <strong>Ekle:</strong> Billing = <strong>GG ECOM LTD</strong> &amp; kart ≠ <strong>1076</strong><br>
         <strong>Atla:</strong> Billing boş veya kart = 1076<br>
         <strong>Kur:</strong> İşlem tarihine göre aylık ortalama USD/GBP
       </div>
-    </div>
 
-    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;">
-      <button class="btn btn-primary" id="btnProcess" disabled onclick="runProcess()" style="width:100%;justify-content:center;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        İşle ve Excel'e yaz
-      </button>
-      <button class="btn btn-success" id="btnDownload" disabled onclick="downloadResult()" style="width:100%;justify-content:center;">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Güncellenmiş Excel'i indir
-      </button>
-      <button class="btn btn-secondary" onclick="clearAll()" style="width:100%;justify-content:center;">Sıfırla</button>
+      <!-- buttons pinned at bottom -->
+      <div style="margin-top:auto;display:flex;flex-direction:column;gap:6px;padding-top:.5rem">
+        <button class="btn btn-p btn-full" id="btnRun" disabled onclick="runProcess()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          İşle ve Excel'e yaz
+        </button>
+        <button class="btn btn-g btn-full" id="btnDL" disabled onclick="downloadResult()">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Güncellenmiş Excel'i indir
+        </button>
+        <button class="btn btn-s btn-full" onclick="clearAll()">Sıfırla</button>
+      </div>
+
     </div>
   </aside>
 
-  <!-- MAIN -->
+  <!-- MAIN — fixed height, children scroll independently -->
   <main class="main">
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-val" id="cntTotal">0</div>
-        <div class="stat-lbl">Toplam PDF</div>
-      </div>
-      <div class="stat-card s-added">
-        <div class="stat-val" id="cntAdded">0</div>
-        <div class="stat-lbl">Eklendi</div>
-      </div>
-      <div class="stat-card s-skip">
-        <div class="stat-val" id="cntSkip">0</div>
-        <div class="stat-lbl">Atlandı</div>
-      </div>
-      <div class="stat-card s-err">
-        <div class="stat-val" id="cntErr">0</div>
-        <div class="stat-lbl">Hata</div>
-      </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-v" id="cT">0</div><div class="stat-l">Toplam PDF</div></div>
+      <div class="stat s-ok"><div class="stat-v" id="cA">0</div><div class="stat-l">Eklendi</div></div>
+      <div class="stat s-sk"><div class="stat-v" id="cS">0</div><div class="stat-l">Atlandı</div></div>
+      <div class="stat s-er"><div class="stat-v" id="cE">0</div><div class="stat-l">Hata</div></div>
     </div>
 
-    <div class="card" style="padding-bottom:.75rem;">
-      <div class="row" style="margin-bottom:.5rem;">
-        <div class="card-title" style="margin-bottom:0">İşlem günlüğü</div>
-        <span class="flex1"></span>
-        <button class="btn btn-secondary" style="padding:3px 10px;font-size:11px;" onclick="clearLog()">Temizle</button>
+    <div class="card" style="flex-shrink:0;padding:.75rem 1rem">
+      <div class="row" style="margin-bottom:.375rem">
+        <div class="ct" style="margin:0">İşlem günlüğü</div>
+        <span class="f1"></span>
+        <button class="btn btn-s btn-xs" onclick="clearLog()">Temizle</button>
       </div>
-      <div id="logBox" class="log-box">
-        <p class="log-default">Hazır. Excel ve PDF dosyalarını yükleyip "İşle" butonuna bas.</p>
-      </div>
+      <div id="log" class="log"><p class="lx">Hazır. Excel ve PDF dosyalarını yükleyip "İşle" butonuna bas.</p></div>
     </div>
 
-    <div class="card" style="padding:.75rem 1rem .5rem;">
-      <div class="row" style="margin-bottom:.625rem;">
-        <div class="card-title" style="margin-bottom:0">PDF listesi</div>
-        <span class="flex1"></span>
-        <div class="filter-row" style="margin-bottom:0;">
-          <button class="filter-btn active" onclick="setFilter('all',this)">Tümü</button>
-          <button class="filter-btn" onclick="setFilter('added',this)">Eklendi</button>
-          <button class="filter-btn" onclick="setFilter('skip',this)">Atlandı</button>
-          <button class="filter-btn" onclick="setFilter('error',this)">Hata</button>
-          <button class="filter-btn" onclick="setFilter('pending',this)">Bekliyor</button>
+    <div class="tbl-area">
+      <div class="tbl-head">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)">PDF listesi</span>
+        <span class="f1"></span>
+        <div id="progWrap" style="display:none;flex:1;max-width:220px">
+          <div class="prog-wrap"><div class="prog" id="prog"></div></div>
+          <div style="font-size:11px;color:var(--tx3)" id="progLbl">0 / 0</div>
+        </div>
+        <div class="filters" id="filterRow">
+          <button class="fb act" onclick="setFilter('all',this)">Tümü</button>
+          <button class="fb" onclick="setFilter('added',this)">Eklendi</button>
+          <button class="fb" onclick="setFilter('skip',this)">Atlandı</button>
+          <button class="fb" onclick="setFilter('error',this)">Hata</button>
+          <button class="fb" onclick="setFilter('pending',this)">Bekliyor</button>
         </div>
       </div>
-      <div id="progressWrap" style="display:none;">
-        <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
-        <p class="text-muted" id="progressLabel" style="margin-bottom:.5rem;">0 / 0</p>
-      </div>
-    </div>
-
-    <div class="table-wrap flex1">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:36px;">#</th>
+      <div class="tbl-scroll">
+        <table>
+          <thead><tr>
+            <th style="width:40px">#</th>
             <th>Dosya adı</th>
             <th>Durum</th>
             <th>Tedarikçi</th>
             <th>Tarih</th>
             <th>USD</th>
-            <th>GBP (kur)</th>
+            <th>GBP</th>
             <th>Kart</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <tr><td colspan="8"><div class="empty-state">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            <p>PDF dosyaları yüklenmedi.</p>
-          </div></td></tr>
-        </tbody>
-      </table>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
     </div>
 
   </main>
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-let xlFileData = null, xlFileName = '', pdfQueue = [], resultWB = null, activeFilter = 'all';
+// ── State — store only File references, NOT file contents ──────────────────
+// pdfQueue holds {name, file (File obj), status, ...parsed fields}
+// file contents are read ONE AT A TIME during processing then GC'd
+let xlData=null, xlName='', queue=[], resultWB=null, activeFilter='all';
 
-// ── FX rates (monthly average USD→GBP) ──────────────────────────────────────
-const FX = {
-  '2024-01':0.7887,'2024-02':0.7909,'2024-03':0.7909,'2024-04':0.7934,
-  '2024-05':0.7874,'2024-06':0.7874,'2024-07':0.7755,'2024-08':0.7755,
-  '2024-09':0.7646,'2024-10':0.7720,'2024-11':0.7873,'2024-12':0.7873,
-  '2025-01':0.8059,'2025-02':0.7942,'2025-03':0.7742,'2025-04':0.7650,
-  '2025-05':0.7558,'2025-06':0.7501,'2025-07':0.7556,'2025-08':0.7710,
-  '2025-09':0.7600,'2025-10':0.7620,'2025-11':0.7608,'2025-12':0.7470,
-  '2026-01':0.7424,'2026-02':0.7380,'2026-03':0.7340,'2026-04':0.7390,
-  '2026-05':0.7460,'2026-06':0.7510
-};
-const MONTHS = {January:'01',February:'02',March:'03',April:'04',May:'05',June:'06',
-  July:'07',August:'08',September:'09',October:'10',November:'11',December:'12'};
+// ── FX rates ────────────────────────────────────────────────────────────────
+const FX={'2024-01':0.7887,'2024-02':0.7909,'2024-03':0.7909,'2024-04':0.7934,
+'2024-05':0.7874,'2024-06':0.7874,'2024-07':0.7755,'2024-08':0.7755,
+'2024-09':0.7646,'2024-10':0.7720,'2024-11':0.7873,'2024-12':0.7873,
+'2025-01':0.8059,'2025-02':0.7942,'2025-03':0.7742,'2025-04':0.7650,
+'2025-05':0.7558,'2025-06':0.7501,'2025-07':0.7556,'2025-08':0.7710,
+'2025-09':0.7600,'2025-10':0.7620,'2025-11':0.7608,'2025-12':0.7470,
+'2026-01':0.7424,'2026-02':0.7380,'2026-03':0.7340,'2026-04':0.7390,
+'2026-05':0.7460,'2026-06':0.7510};
+const MON={January:'01',February:'02',March:'03',April:'04',May:'05',June:'06',
+July:'07',August:'08',September:'09',October:'10',November:'11',December:'12'};
+function getRate(d){if(!d)return .75;const m=d.match(/([A-Za-z]+)\s+\d+,\s*(\d{4})/);return m?FX[m[2]+'-'+(MON[m[1]]||'01')]||.75:.75}
+function parseDate(d){if(!d)return null;const m=d.match(/([A-Za-z]+)\s+(\d+),\s*(\d{4})/);return m?new Date(+m[3],Object.keys(MON).indexOf(m[1]),+m[2]):null}
+function toXLDate(d){return d?Math.round((d-new Date(1899,11,30))/86400000):null}
 
-function getRate(dateStr){
-  if(!dateStr) return 0.75;
-  const m = dateStr.match(/([A-Za-z]+)\s+\d+,\s*(\d{4})/);
-  if(!m) return 0.75;
-  return FX[m[2]+'-'+(MONTHS[m[1]]||'01')] || 0.75;
+// ── Log ─────────────────────────────────────────────────────────────────────
+function log(msg,c='lx'){
+  const b=document.getElementById('log');
+  if(b.children.length===1&&b.children[0].className==='lx')b.innerHTML='';
+  const p=document.createElement('p');p.className=c;p.textContent=msg;
+  b.appendChild(p);b.scrollTop=b.scrollHeight;
+  // trim log to 500 lines to avoid DOM bloat
+  while(b.children.length>500)b.removeChild(b.firstChild);
 }
-
-function parseDate(dateStr){
-  if(!dateStr) return null;
-  const m = dateStr.match(/([A-Za-z]+)\s+(\d+),\s*(\d{4})/);
-  if(!m) return null;
-  return new Date(parseInt(m[3]), Object.keys(MONTHS).indexOf(m[1]), parseInt(m[2]));
-}
-
-function toExcelDate(d){ return d ? Math.round((d - new Date(1899,11,30)) / 86400000) : null; }
-
-// ── Logging ──────────────────────────────────────────────────────────────────
-function log(msg, cls='log-default'){
-  const b = document.getElementById('logBox');
-  if(b.children.length === 1 && b.children[0].classList.contains('log-default') && b.children[0].textContent.startsWith('Hazır')) b.innerHTML='';
-  const p = document.createElement('p');
-  p.className = cls;
-  p.textContent = msg;
-  b.appendChild(p);
-  b.scrollTop = b.scrollHeight;
-}
-function clearLog(){ document.getElementById('logBox').innerHTML = '<p class="log-default">Günlük temizlendi.</p>'; }
+function clearLog(){document.getElementById('log').innerHTML='<p class="lx">Günlük temizlendi.</p>'}
 
 // ── Stats ────────────────────────────────────────────────────────────────────
 function updateStats(){
-  const all = pdfQueue.length;
-  const added = pdfQueue.filter(p=>p.status==='added').length;
-  const skip = pdfQueue.filter(p=>p.status==='skip').length;
-  const err = pdfQueue.filter(p=>p.status==='error').length;
-  document.getElementById('cntTotal').textContent = all;
-  document.getElementById('cntAdded').textContent = added;
-  document.getElementById('cntSkip').textContent = skip;
-  document.getElementById('cntErr').textContent = err;
-  document.getElementById('pdfCountBadge').textContent = all + ' PDF';
-  document.getElementById('pdfCountBadge').style.display = all ? 'inline-flex' : 'none';
-  document.getElementById('btnClearPDF').style.display = all ? 'inline-flex' : 'none';
-  checkReady();
+  document.getElementById('cT').textContent=queue.length;
+  document.getElementById('cA').textContent=queue.filter(p=>p.status==='added').length;
+  document.getElementById('cS').textContent=queue.filter(p=>p.status==='skip').length;
+  document.getElementById('cE').textContent=queue.filter(p=>p.status==='error').length;
+  document.getElementById('pdfSub').textContent=queue.length?queue.length+' PDF yüklendi':'1000+ PDF desteklenir';
+  document.getElementById('btnRun').disabled=!(xlData&&queue.length>0);
 }
 
-function checkReady(){
-  const ready = xlFileData && pdfQueue.length > 0;
-  document.getElementById('btnProcess').disabled = !ready;
+// ── Table — virtual render: show max 200 rows at once ────────────────────────
+const BM={pending:'b-w',added:'b-g',skip:'b-s',error:'b-e',processing:'b-p'};
+const BL={pending:'Bekliyor',added:'Eklendi',skip:'Atlandı',error:'Hata',processing:'İşleniyor'};
+let renderTimer=null;
+function scheduleRender(){clearTimeout(renderTimer);renderTimer=setTimeout(renderTable,120)}
+function renderTable(){
+  const tbody=document.getElementById('tbody');
+  const src=activeFilter==='all'?queue:queue.filter(p=>p.status===activeFilter);
+  if(!src.length){
+    tbody.innerHTML='<tr><td colspan="8"><div class="empty"><svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Bu filtrede kayıt yok.</p></div></td></tr>';
+    return;
+  }
+  // show only last 200 for performance — user can filter to see specifics
+  const show=src.length>200?src.slice(-200):src;
+  const prefix=src.length>200?`<tr><td colspan="8" style="text-align:center;padding:8px;font-size:12px;color:var(--tx3)">İlk ${src.length-200} satır gizlendi — filtreleme kullanın</td></tr>`:'';
+  tbody.innerHTML=prefix+show.map((p,i)=>{
+    const idx=queue.indexOf(p)+1;
+    return`<tr>
+    <td style="color:var(--tx3)">${idx}</td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name}">${p.name}</td>
+    <td><span class="b ${BM[p.status]||'b-w'}">${BL[p.status]||p.status}</span></td>
+    <td style="color:var(--tx2);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis">${p.supplier||'—'}</td>
+    <td style="white-space:nowrap;color:var(--tx2);font-size:12px">${p.txDate||'—'}</td>
+    <td style="font-size:12px">${p.amountUSD!=null?'$'+p.amountUSD.toFixed(2):'—'}</td>
+    <td style="font-size:12px">${p.gbp!=null?'£'+p.gbp.toFixed(2):'—'}</td>
+    <td style="font-size:12px;color:var(--tx2)">${p.lastDigits?'···'+p.lastDigits:'—'}</td>
+    </tr>`;
+  }).join('');
 }
 
-// ── Table rendering ──────────────────────────────────────────────────────────
-function setFilter(f, btn){
-  activeFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+function setFilter(f,btn){
+  activeFilter=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
   renderTable();
 }
 
-function renderTable(){
-  const tbody = document.getElementById('tableBody');
-  const filtered = activeFilter === 'all' ? pdfQueue : pdfQueue.filter(p=>p.status===activeFilter);
-  if(!filtered.length){
-    tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>Bu filtrede kayıt yok.</p></div></td></tr>';
-    return;
-  }
-  const badgeMap = { pending:'badge-pending', added:'badge-added', skip:'badge-skip', error:'badge-error', processing:'badge-processing' };
-  const labelMap = { pending:'Bekliyor', added:'Eklendi', skip:'Atlandı', error:'Hata', processing:'İşleniyor...' };
-  tbody.innerHTML = filtered.map((p,i) => `<tr>
-    <td style="color:var(--text3)">${pdfQueue.indexOf(p)+1}</td>
-    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.name}">${p.name}</td>
-    <td><span class="badge ${badgeMap[p.status]||'badge-pending'}">${labelMap[p.status]||p.status}</span></td>
-    <td style="color:var(--text2)">${p.supplier||'—'}</td>
-    <td style="white-space:nowrap;color:var(--text2)">${p.txDate||'—'}</td>
-    <td>${p.amountUSD!=null ? '$'+p.amountUSD.toFixed(2) : '—'}</td>
-    <td>${p.gbp!=null ? '£'+p.gbp.toFixed(2)+' <span style="color:var(--text3);font-size:11px">('+p.rate+')</span>' : '—'}</td>
-    <td style="color:var(--text2)">${p.cardType||''} ${p.lastDigits ? '···'+p.lastDigits : '—'}</td>
-  </tr>`).join('');
+// ── Drop zones ───────────────────────────────────────────────────────────────
+function setupDrop(id,cb){
+  const z=document.getElementById(id);
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('over')});
+  z.addEventListener('dragleave',()=>z.classList.remove('over'));
+  z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('over');cb(e.dataTransfer.files)});
 }
-
-// ── File drop setup ──────────────────────────────────────────────────────────
-function setupDrop(id, cb){
-  const z = document.getElementById(id);
-  z.addEventListener('dragover', e=>{ e.preventDefault(); z.classList.add('over'); });
-  z.addEventListener('dragleave', ()=>z.classList.remove('over'));
-  z.addEventListener('drop', e=>{ e.preventDefault(); z.classList.remove('over'); cb(e.dataTransfer.files); });
-}
-setupDrop('xlDropZone', files=>{ if(files[0]) loadXL(files[0]); });
-setupDrop('pdfDropZone', addPDFs);
-document.getElementById('xlFile').addEventListener('change', e=>{ if(e.target.files[0]) loadXL(e.target.files[0]); });
-document.getElementById('pdfFiles').addEventListener('change', e=>addPDFs(e.target.files));
+setupDrop('xlDZ',f=>{if(f[0])loadXL(f[0])});
+setupDrop('pdfDZ',addPDFs);
+document.getElementById('xlF').addEventListener('change',e=>{if(e.target.files[0])loadXL(e.target.files[0])});
+document.getElementById('pdfF').addEventListener('change',e=>addPDFs(e.target.files));
 
 function loadXL(file){
-  xlFileName = file.name;
-  const r = new FileReader();
-  r.onload = e=>{
-    xlFileData = e.target.result;
-    document.getElementById('xlName').textContent = file.name;
-    document.getElementById('xlLoaded').style.display = 'flex';
-    document.getElementById('xlDropZone').style.display = 'none';
-    log('Excel yüklendi: '+file.name, 'log-info');
-    checkReady();
-  };
+  xlName=file.name;
+  const r=new FileReader();
+  r.onload=e=>{xlData=e.target.result;document.getElementById('xlName').textContent=file.name;document.getElementById('xlOK').style.display='flex';document.getElementById('xlDZ').style.display='none';log('Excel yüklendi: '+file.name,'li');updateStats()};
   r.readAsArrayBuffer(file);
 }
 
+let addLock=false;
 function addPDFs(files){
-  const arr = Array.from(files);
-  let added = 0;
+  if(addLock)return; addLock=true; setTimeout(()=>addLock=false,300);
+  const arr=Array.from(files);
+  let added=0,skippedHidden=0,skippedDupe=0;
+  const existing=new Set(queue.map(p=>p.name+'|'+p.file.size));
   arr.forEach(f=>{
-    if(f.name.toLowerCase().endsWith('.pdf') && !pdfQueue.find(p=>p.name===f.name)){
-      pdfQueue.push({ name:f.name, file:f, status:'pending', supplier:null, txDate:null, amountUSD:null, gbp:null, rate:null, cardType:null, lastDigits:null });
-      added++;
-    }
+    const name=f.name;
+    if(name.startsWith('._')||name.startsWith('.')||name.startsWith('~$')||f.size===0){skippedHidden++;return}
+    if(!name.toLowerCase().endsWith('.pdf'))return;
+    const key=name+'|'+f.size;
+    if(existing.has(key)){skippedDupe++;return}
+    existing.add(key);
+    queue.push({name,file:f,status:'pending',supplier:null,txDate:null,amountUSD:null,gbp:null,rate:null,cardType:null,lastDigits:null});
+    added++;
   });
-  if(added) log(`${added} yeni PDF eklendi (toplam: ${pdfQueue.length})`, 'log-info');
-  updateStats();
-  renderTable();
+  let msg=added+' PDF eklendi (toplam: '+queue.length+')';
+  if(skippedHidden) msg+=' · '+skippedHidden+' gizli/sistem dosyasi atlandi';
+  if(skippedDupe)   msg+=' · '+skippedDupe+' tekrar atlandi';
+  log(msg,'li');
+  updateStats();scheduleRender();
 }
 
-// ── PDF parsing ──────────────────────────────────────────────────────────────
-async function extractText(file){
-  const ab = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({data:ab}).promise;
-  let text = '';
+// ── PDF parse — reads ONE file at a time, returns, GC can collect ─────────
+async function readAndParse(file){
+  // Read file → ArrayBuffer → parse → immediately discard
+  const ab=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  let text='';
   for(let i=1;i<=pdf.numPages;i++){
-    const pg = await pdf.getPage(i);
-    const tc = await pg.getTextContent();
-    text += tc.items.map(it=>it.str).join(' ') + '\n';
+    const pg=await pdf.getPage(i);
+    const tc=await pg.getTextContent();
+    text+=tc.items.map(it=>it.str).join(' ')+'\n';
+    pg.cleanup();
   }
-  return text;
-}
-
-function parsePDF(text){
-  const t = text.replace(/\s+/g,' ');
-  const r = {};
-
-  const cardM = t.match(/(Visa|MasterCard|American Express|Amex)[^|]*\|\s*Last digits:\s*(\d{4})/i);
-  if(cardM){ r.cardType = cardM[1]; r.lastDigits = cardM[2]; }
-
-  const billingM = t.match(/Billing address\s+([\s\S]*?)(?:Item\(s\) Subtotal|Credit Card transactions)/i);
-  if(billingM){ r.billingBlock = billingM[1].trim(); r.isGGEcom = /GG\s*ECOM\s*LTD/i.test(billingM[1]); }
-  else { r.isGGEcom = false; }
-
-  const chargeM = t.match(/(Visa|MasterCard)[^:]*:\s*([A-Za-z]+ \d+,\s*\d{4}):\s*\$([\d.]+)/i);
-  if(chargeM){ r.txDate = chargeM[2]; r.amountUSD = parseFloat(chargeM[3]); }
-
-  if(!r.amountUSD){ const gm = t.match(/Grand Total:\s*\$([\d.]+)/i); if(gm) r.amountUSD = parseFloat(gm[1]); }
-
-  const soldM = t.match(/Sold by:\s*([^\n(]+?)(?:\s*\(seller profile\)|\s*Business Price)/im);
-  if(soldM) r.supplier = soldM[1].trim();
-
-  if(!r.txDate){ const om = t.match(/Order Placed:\s*([A-Za-z]+ \d+,\s*\d{4})/i); if(om) r.txDate = om[1]; }
-
+  pdf.destroy();
+  // parse
+  const t=text.replace(/\s+/g,' ');
+  const r={};
+  const cm=t.match(/(Visa|MasterCard|American Express|Amex)[^|]*\|\s*Last digits:\s*(\d{4})/i);
+  if(cm){r.cardType=cm[1];r.lastDigits=cm[2]}
+  const bm=t.match(/Billing address\s+([\s\S]*?)(?:Item\(s\) Subtotal|Credit Card transactions)/i);
+  r.isGGEcom=bm?/GG\s*ECOM\s*LTD/i.test(bm[1]):false;
+  const chm=t.match(/(Visa|MasterCard)[^:]*:\s*([A-Za-z]+ \d+,\s*\d{4}):\s*\$([\d.]+)/i);
+  if(chm){r.txDate=chm[2];r.amountUSD=parseFloat(chm[3])}
+  if(!r.amountUSD){const gm=t.match(/Grand Total:\s*\$([\d.]+)/i);if(gm)r.amountUSD=parseFloat(gm[1])}
+  const sm=t.match(/Sold by:\s*([^\n(]+?)(?:\s*\(seller profile\)|\s*Business Price)/im);
+  if(sm)r.supplier=sm[1].trim();
+  if(!r.txDate){const om=t.match(/Order Placed:\s*([A-Za-z]+ \d+,\s*\d{4})/i);if(om)r.txDate=om[1]}
   return r;
 }
 
-// ── Main process ─────────────────────────────────────────────────────────────
+// ── Main process — strictly sequential, 1 PDF at a time ─────────────────────
 async function runProcess(){
-  if(!xlFileData || !pdfQueue.length) return;
+  if(!xlData||!queue.length)return;
+  const btn=document.getElementById('btnRun');
+  btn.disabled=true;btn.innerHTML='<span class="spin"></span> İşleniyor...';
+  document.getElementById('btnDL').disabled=true;
 
-  const btn = document.getElementById('btnProcess');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> İşleniyor...';
-  document.getElementById('btnDownload').disabled = true;
+  const wb=XLSX.read(xlData,{type:'array',cellDates:false});
+  const ws=wb.Sheets['2-Purchase (Mal alis)'];
+  if(!ws){log('Purchase sayfası bulunamadı!','le');btn.disabled=false;btn.innerHTML='İşle ve Excel\'e yaz';return}
 
-  const wb = XLSX.read(xlFileData, {type:'array', cellDates:false});
-  const wsName = '2-Purchase (Mal alis)';
-  const ws = wb.Sheets[wsName];
-
-  if(!ws){ log('Purchase sayfası bulunamadı!', 'log-err'); btn.disabled=false; btn.innerHTML='İşle ve Excel\'e yaz'; return; }
-
-  // Purchase sheet structure:
-  //   Row 1-2: empty
-  //   Row 3: "PURCHASE TABLE" title
-  //   Row 4 (idx 3): headers — DATE / SUPPLIER / AMOUNT / PAGE TOTAL
-  //   Row 5 (idx 4): TEMPLATE row — "00/00/2000" placeholder + =SUM(D5:D271) formula — NEVER overwrite
-  //   Row 6 (idx 5): first real data row
-  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:G339');
-  let nextRow = 5; // 0-indexed = Excel row 6, first real data row
-  for(let r = 5; r <= range.e.r + 1; r++){
-    const cell = ws[XLSX.utils.encode_cell({r, c:1})]; // col B = DATE
-    const hasRealDate = cell && cell.v && cell.v !== '00/00/2000' && cell.v !== 0 && cell.v !== ' ' && String(cell.v).trim() !== '';
-    if(!hasRealDate){ nextRow = r; break; }
-    nextRow = r + 1;
+  // Find first empty data row (row 5 = template, data starts row 6 = idx 5)
+  const range=XLSX.utils.decode_range(ws['!ref']||'A1:G339');
+  let nextRow=5;
+  for(let r=5;r<=range.e.r+1;r++){
+    const cell=ws[XLSX.utils.encode_cell({r,c:1})];
+    const empty=!cell||!cell.v||String(cell.v).trim()===''||String(cell.v).trim()===' ';
+    if(empty){nextRow=r;break}
+    nextRow=r+1;
   }
-  log(`Purchase sayfası: veriler Excel satır ${nextRow+1}'den itibaren ekleniyor (şablon satırı 5 korundu)`, 'log-info');
+  log(`Purchase sayfası: satır ${nextRow+1}'den itibaren ekleniyor`,'li');
 
-  // Reset status for re-processing
-  pdfQueue.forEach(p=>{ p.status='pending'; p.supplier=null; p.txDate=null; p.amountUSD=null; p.gbp=null; p.rate=null; p.cardType=null; p.lastDigits=null; });
+  // Reset all statuses
+  queue.forEach(p=>{p.status='pending';p.supplier=null;p.txDate=null;p.amountUSD=null;p.gbp=null;p.rate=null;p.cardType=null;p.lastDigits=null});
 
-  const pw = document.getElementById('progressWrap');
-  const pb = document.getElementById('progressBar');
-  const pl = document.getElementById('progressLabel');
-  pw.style.display = 'block';
+  const pw=document.getElementById('progWrap');
+  const pb=document.getElementById('prog');
+  const pl=document.getElementById('progLbl');
+  pw.style.display='block';
 
-  const CONCURRENCY = 4;
-  let processed = 0, addedCount = 0;
+  let addedCount=0, logThrottle=0;
 
-  async function processOne(p){
-    p.status = 'processing';
-    renderTable();
-    try {
-      const text = await extractText(p.file);
-      const data = parsePDF(text);
+  // SEQUENTIAL — process ONE PDF at a time to avoid memory explosion
+  for(let i=0;i<queue.length;i++){
+    const p=queue[i];
+    p.status='processing';
 
-      p.cardType = data.cardType || '';
-      p.lastDigits = data.lastDigits || '';
-      p.txDate = data.txDate || '';
-      p.supplier = data.supplier || 'Amazon';
-      p.amountUSD = data.amountUSD || null;
+    // Update UI every 10 items (not every item — DOM updates are expensive)
+    if(i%10===0){
+      const pct=Math.round((i/queue.length)*100);
+      pb.style.width=pct+'%';
+      pl.textContent=`${i} / ${queue.length} (${pct}%)`;
+      updateStats();scheduleRender();
+      // Yield to browser so it can repaint and handle events
+      await new Promise(res=>setTimeout(res,0));
+    }
 
-      if(!data.lastDigits){
-        p.status = 'error'; log(`✗ ${p.name} — kart bilgisi okunamadı`, 'log-err'); return;
-      }
-      if(data.lastDigits === '1076'){
-        p.status = 'skip'; log(`– ${p.name} — kart 1076, atlandı`, 'log-skip'); return;
-      }
-      if(!data.isGGEcom){
-        p.status = 'skip'; log(`– ${p.name} — GG ECOM LTD değil, atlandı`, 'log-skip'); return;
-      }
+    try{
+      const data=await readAndParse(p.file);
+      p.cardType=data.cardType||'';
+      p.lastDigits=data.lastDigits||'';
+      p.txDate=data.txDate||'';
+      p.supplier=data.supplier||'Amazon';
+      p.amountUSD=data.amountUSD||null;
 
-      const rate = getRate(data.txDate);
-      const gbp = data.amountUSD ? parseFloat((data.amountUSD * rate).toFixed(2)) : 0;
-      p.rate = rate; p.gbp = gbp;
+      if(!data.lastDigits){p.status='error';if(logThrottle++<200)log(`✗ ${p.name} — kart okunamadı`,'le');continue}
+      if(data.lastDigits==='1076'){p.status='skip';if(logThrottle++<200)log(`– ${p.name} — kart 1076`,'ls');continue}
+      if(!data.isGGEcom){p.status='skip';if(logThrottle++<200)log(`– ${p.name} — GG ECOM LTD değil`,'ls');continue}
 
-      const row = nextRow++; // satır numarasını hemen al (paralel çakışmayı önler)
-      const useDate = parseDate(data.txDate);
-      const exDate = toExcelDate(useDate);
+      const rate=getRate(data.txDate);
+      const gbp=data.amountUSD?parseFloat((data.amountUSD*rate).toFixed(2)):0;
+      p.rate=rate;p.gbp=gbp;
 
-      ws[XLSX.utils.encode_cell({r:row, c:1})] = {t:'n', v:exDate, z:'dd/mm/yyyy'};
-      ws[XLSX.utils.encode_cell({r:row, c:2})] = {t:'s', v:p.supplier};
-      ws[XLSX.utils.encode_cell({r:row, c:3})] = {t:'n', v:gbp, z:'0.00'};
-      if(range.e.r < row) range.e.r = row;
-      ws['!ref'] = XLSX.utils.encode_range(range);
+      const row=nextRow++;
+      const exDate=toXLDate(parseDate(data.txDate));
+      ws[XLSX.utils.encode_cell({r:row,c:1})]={t:'n',v:exDate,z:'dd/mm/yyyy'};
+      ws[XLSX.utils.encode_cell({r:row,c:2})]={t:'s',v:p.supplier};
+      ws[XLSX.utils.encode_cell({r:row,c:3})]={t:'n',v:gbp,z:'0.00'};
+      if(range.e.r<row)range.e.r=row;
+      ws['!ref']=XLSX.utils.encode_range(range);
 
-      p.status = 'added'; addedCount++;
-      log(`✓ ${p.name} — ${p.supplier} | ${data.txDate} | $${data.amountUSD} → £${gbp}`, 'log-ok');
-    } catch(err){
-      p.status = 'error'; log(`✗ ${p.name} — ${err.message}`, 'log-err');
+      p.status='added';addedCount++;
+      if(logThrottle++<200)log(`✓ ${p.supplier} | ${p.txDate} | $${p.amountUSD} → £${gbp}`,'lo');
+
+    }catch(err){
+      p.status='error';if(logThrottle++<200)log(`✗ ${p.name} — ${err.message}`,'le');
     }
   }
 
-  // Process in batches with concurrency
-  for(let i = 0; i < pdfQueue.length; i += CONCURRENCY){
-    const batch = pdfQueue.slice(i, i+CONCURRENCY);
-    await Promise.all(batch.map(processOne));
-    processed += batch.length;
-    const pct = Math.round((processed / pdfQueue.length) * 100);
-    pb.style.width = pct + '%';
-    pl.textContent = `${processed} / ${pdfQueue.length} (${pct}%)`;
-    updateStats();
-    renderTable();
-  }
+  // Final update
+  pb.style.width='100%';
+  pl.textContent=`${queue.length} / ${queue.length} (100%)`;
+  updateStats();renderTable();
 
-  resultWB = wb;
-  log(`\nTamamlandı! ${addedCount} kayıt eklendi, ${pdfQueue.filter(p=>p.status==='skip').length} atlandı.`, 'log-info');
+  resultWB=wb;
+  const skipped=queue.filter(p=>p.status==='skip').length;
+  const errors=queue.filter(p=>p.status==='error').length;
+  log(`Tamamlandı — ${addedCount} eklendi · ${skipped} atlandı · ${errors} hata`,'li');
 
-  btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg> İşle ve Excel\'e yaz';
-  btn.disabled = false;
-  if(addedCount > 0) document.getElementById('btnDownload').disabled = false;
+  btn.innerHTML='<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> İşle ve Excel\'e yaz';
+  btn.disabled=false;
+  if(addedCount>0)document.getElementById('btnDL').disabled=false;
 }
 
 function downloadResult(){
-  if(!resultWB) return;
-  const name = xlFileName.replace('.xlsx','') + '_guncellendi.xlsx';
-  XLSX.writeFile(resultWB, name);
-  log(`İndirme başlatıldı: ${name}`, 'log-ok');
+  if(!resultWB)return;
+  const name=xlName.replace('.xlsx','')+'_guncellendi.xlsx';
+  XLSX.writeFile(resultWB,name);
+  log('İndirme başlatıldı: '+name,'lo');
 }
 
-// ── Clear helpers ─────────────────────────────────────────────────────────────
+// ── Clear ────────────────────────────────────────────────────────────────────
 function clearXL(){
-  xlFileData=null; xlFileName='';
-  document.getElementById('xlLoaded').style.display='none';
-  document.getElementById('xlDropZone').style.display='block';
-  document.getElementById('xlFile').value='';
-  resultWB=null;
-  document.getElementById('btnDownload').disabled=true;
-  checkReady();
+  xlData=null;xlName='';
+  document.getElementById('xlOK').style.display='none';
+  document.getElementById('xlDZ').style.display='block';
+  document.getElementById('xlF').value='';
+  resultWB=null;document.getElementById('btnDL').disabled=true;
+  updateStats();
 }
 function clearPDFs(){
-  pdfQueue=[];
-  updateStats(); renderTable();
-  document.getElementById('progressWrap').style.display='none';
+  queue=[];resultWB=null;
+  document.getElementById('progWrap').style.display='none';
+  document.getElementById('btnDL').disabled=true;
+  updateStats();renderTable();
 }
-function clearAll(){ clearXL(); clearPDFs(); clearLog(); resultWB=null; document.getElementById('btnDownload').disabled=true; }
+function clearAll(){clearXL();clearPDFs();clearLog()}
+
+// init
+renderTable();
 </script>
 </body>
 </html>
